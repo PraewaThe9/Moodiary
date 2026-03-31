@@ -26,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 // ทำให้โฟลเดอร์ uploads เข้าถึงได้ผ่าน URL
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
+// --- [FIXED] ตั้งค่าการเชื่อมต่อ MySQL สำหรับ Aiven + SSL ---
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -33,16 +34,16 @@ const db = mysql.createConnection({
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
     ssl: {
-        rejectUnauthorized: false // บรรทัดนี้สำคัญมากสำหรับการเชื่อมต่อ Cloud DB
+        rejectUnauthorized: false // จำเป็นมากสำหรับ Cloud DB
     }
 });
 
 db.connect((err) => {
     if (err) {
-        console.error('Error connecting to Database:', err);
+        console.error('❌ Error connecting to Database:', err.message);
         return;
     }
-    console.log('Connected to MySQL Database!');
+    console.log('✅ Connected to MySQL Database (Aiven)!');
 });
 
 const transporter = nodemailer.createTransport({
@@ -87,22 +88,20 @@ app.post('/verify-otp', async (req, res) => {
     } catch (error) { res.status(500).json({ message: "Internal Server Error" }); }
 });
 
-// [ADD] เพิ่ม API สำหรับตรวจสอบ OTP โดยเฉพาะ (เพื่อแก้ Error 404)
 app.post('/verify-reset-otp', (req, res) => {
     const { email, otp } = req.body;
-    
-    // ตรวจสอบว่ามี OTP ใน Store หรือไม่ และตรงกันไหม
     if (otpStore[email] && otpStore[email] == otp) {
-        // ถ้าถูกต้อง ให้ตอบกลับสำเร็จ (แต่อย่าเพิ่งลบ OTP เพราะต้องใช้ในหน้า reset-password ต่อ)
         res.json({ message: "รหัส OTP ถูกต้อง" });
     } else {
         res.status(400).json({ message: "รหัส OTP ไม่ถูกต้องหรือหมดอายุแล้ว" });
     }
 });
+
 // --- 2. ระบบ Login และ Password ---
 app.post('/login', (req, res) => {
     const { email, password } = req.body;
     db.query("SELECT * FROM users WHERE email = ?", [email], async (err, results) => {
+        if (err) return res.status(500).json({ message: "Database error" });
         if (results.length === 0) return res.status(401).json({ message: "ไม่พบอีเมลในระบบ" });
         const isMatch = await bcrypt.compare(password, results[0].password);
         if (isMatch) res.json({ 
@@ -166,77 +165,55 @@ app.post('/api/update-profile', upload.single('profile_image'), (req, res) => {
 });
 
 // --- 4. ระบบบันทึกไดอารี่/อารมณ์ ---
-
-// [ADD] API สำหรับดึงรายการเดือนที่มีบันทึก (สำหรับ Filter แถบด้านข้าง)
 app.get('/api/diary-months/:userId', (req, res) => {
     const userId = req.params.userId.toString().split(':')[0];
-    
     const sql = `
-        SELECT DISTINCT 
-            DATE_FORMAT(entry_date, '%m') AS month_num,
-            DATE_FORMAT(entry_date, '%Y') AS year_num
-        FROM mood_entries 
-        WHERE user_id = ? 
+        SELECT DISTINCT MONTH(entry_date) AS month_num, YEAR(entry_date) AS year_num
+        FROM mood_entries WHERE user_id = ? 
         ORDER BY year_num DESC, month_num DESC
     `;
-
     db.query(sql, [userId], (err, results) => {
         if (err) return res.status(500).json({ status: "Error", message: err.message });
         res.json({ status: "Success", data: results });
     });
 });
 
-// [FIXED] เปลี่ยน Path จาก /api/mood_entries เป็น /api/diaries ให้ตรงกับ frontend
 app.get('/api/diaries/:userId', (req, res) => {
     const userId = req.params.userId.toString().split(':')[0];
     const { month, year } = req.query; 
-    
     let sql = "SELECT * FROM mood_entries WHERE user_id = ?";
     let params = [userId];
-
     if (month && year) {
         sql += " AND MONTH(entry_date) = ? AND YEAR(entry_date) = ?";
         params.push(month, year);
     }
     sql += " ORDER BY entry_date DESC";
-
     db.query(sql, params, (err, results) => {
         if (err) return res.status(500).json({ status: "Error", message: err.message });
         res.json({ status: "Success", data: results });
     });
 });
 
-// [FIXED] ปรับปรุงการบันทึกใหม่
 app.post('/api/save-diary', (req, res) => {
     const { user_id, date, text, mood, emoji, is_analyzed } = req.body;
-    // ล้างค่า userId ป้องกันเครื่องหมาย :
     const cleanUserId = user_id.toString().split(':')[0];
-
-    const sql = `
-        INSERT INTO mood_entries 
-        (user_id, entry_date, entry_text, predicted_mood, is_analyzed, selected_emoji) 
-        VALUES (?, ?, ?, ?, ?, ?)
-    `;
+    const sql = `INSERT INTO mood_entries (user_id, entry_date, entry_text, predicted_mood, is_analyzed, selected_emoji) VALUES (?, ?, ?, ?, ?, ?)`;
     db.query(sql, [cleanUserId, date, text, mood, is_analyzed || 0, emoji], (err, result) => {
         if (err) return res.status(500).json({ status: "Error", message: err.message });
         res.json({ status: "Success", message: "บันทึกเรียบร้อยแล้ว", id: result.insertId });
     });
 });
 
-// [FIXED] ปรับปรุงการแก้ไขบันทึก
 app.put('/api/update-diary/:id', (req, res) => {
     const diaryId = req.params.id.toString().split(':')[0];
     const { text, mood, emoji, date } = req.body;
-
     const sql = `UPDATE mood_entries SET entry_text = ?, predicted_mood = ?, selected_emoji = ?, entry_date = ? WHERE id = ?`;
-    
     db.query(sql, [text, mood, emoji, date, diaryId], (err, result) => {
         if (err) return res.status(500).json({ status: "Error", message: err.message });
         res.json({ status: "Success" });
     });
 });
 
-// [FIXED] ปรับปรุงการลบบันทึก
 app.delete('/api/delete-diary/:id', (req, res) => {
     const diaryId = req.params.id.toString().split(':')[0];
     const sql = `DELETE FROM mood_entries WHERE id = ?`;
@@ -246,65 +223,25 @@ app.delete('/api/delete-diary/:id', (req, res) => {
     });
 });
 
-// ดึงข้อมูลสถิติอารมณ์รายเดือน
 app.get('/api/overview/:userId', (req, res) => {
     const { userId } = req.params;
     const { month, year } = req.query;
-
-    // 1. SQL สำหรับหาจำนวนอารมณ์แต่ละประเภท (สำหรับ Pie Chart)
-    const statsSql = `
-        SELECT predicted_mood as mood, COUNT(*) as count 
-        FROM mood_entries 
-        WHERE user_id = ? AND MONTH(entry_date) = ? AND YEAR(entry_date) = ?
-        GROUP BY predicted_mood`;
-
-    // 2. SQL สำหรับหาแนวโน้มอารมณ์รายวัน (สำหรับ Line Chart)
-    // เราจะใช้คะแนนความสุขจำลองตามชื่ออารมณ์ (เช่น มีความสุข=5, เศร้า=1)
-    const timelineSql = `
-        SELECT DAY(entry_date) as day, predicted_mood 
-        FROM mood_entries 
-        WHERE user_id = ? AND MONTH(entry_date) = ? AND YEAR(entry_date) = ?
-        ORDER BY entry_date ASC`;
+    const statsSql = `SELECT predicted_mood as mood, COUNT(*) as count FROM mood_entries WHERE user_id = ? AND MONTH(entry_date) = ? AND YEAR(entry_date) = ? GROUP BY predicted_mood`;
+    const timelineSql = `SELECT DAY(entry_date) as day, predicted_mood FROM mood_entries WHERE user_id = ? AND MONTH(entry_date) = ? AND YEAR(entry_date) = ? ORDER BY entry_date ASC`;
 
     db.query(statsSql, [userId, month, year], (err, statsResults) => {
         if (err) return res.status(500).json({ status: "Error", message: err.message });
-
         db.query(timelineSql, [userId, month, year], (err, timelineResults) => {
             if (err) return res.status(500).json({ status: "Error", message: err.message });
-
-            // แปลงอารมณ์เป็นคะแนน (1-5) เพื่อแสดงผลในกราฟเส้น
             const moodScores = { 'มีความสุข': 5, 'มีความรัก': 5, 'โอเคดี': 3, 'กังวล': 2, 'เศร้า': 1, 'โกรธ': 1 };
-            const timeline = timelineResults.map(t => ({
-                day: t.day,
-                score: moodScores[t.predicted_mood] || 3
-            }));
-
-            res.json({
-                status: "Success",
-                data: {
-                    stats: statsResults, // [ { mood: 'มีความสุข', count: 10 }, ... ]
-                    timeline: timeline   // [ { day: 1, score: 5 }, ... ]
-                }
-            });
+            const timeline = timelineResults.map(t => ({ day: t.day, score: moodScores[t.predicted_mood] || 3 }));
+            res.json({ status: "Success", data: { stats: statsResults, timeline: timeline } });
         });
     });
 });
 
-// ดึงรายการเดือนที่มีการบันทึกไว้ (สำหรับ Sidebar ขวา)
-app.get('/api/diary-months/:userId', (req, res) => {
-    const { userId } = req.params;
-    const sql = `
-        SELECT DISTINCT MONTH(entry_date) as month_num, YEAR(entry_date) as year_num
-        FROM mood_entries
-        WHERE user_id = ?
-        ORDER BY year_num DESC, month_num DESC`;
-
-    db.query(sql, [userId], (err, results) => {
-        if (err) return res.status(500).json({ status: "Error", message: err.message });
-        res.json({ status: "Success", data: results });
-    });
-});
-
-app.listen(3000, () => {
-    console.log('Server is running on http://localhost:3000');
+// --- [FIXED] ตั้งค่า Port ให้รองรับ Render ---
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
 });
