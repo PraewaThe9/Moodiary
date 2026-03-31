@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Moodiary - วิเคราะห์อารมณ์</title>
+    <style>
+        @font-face { 
+            font-family: 'biscuit2'; 
+            src: url('../assets/fonts/biscuit2.ttf') format('opentype'); 
+        }
+        body { font-family: 'biscuit2', sans-serif; transition: background-color 0.3s; }
+        .sidebar-item:hover { color: #f1c443; cursor: pointer; transition: 0.3s; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="flex h-screen overflow-hidden bg-[#e2ddc7] dark:bg-[#121212] transition-colors duration-300">
+
+    <div class="w-64 bg-[#e2ddc7] dark:bg-[#1a1a1a] flex flex-col p-8 transition-colors">
+        <div class="mb-12">
+            <div class="w-16 h-16 bg-gray-600 rounded-xl mb-4 overflow-hidden shadow-lg">
+                <img id="navProfilePic" src="https://via.placeholder.com/200" alt="profile" class="w-full h-full object-cover">
+            </div>
+            <h2 id="navUsername" class="text-[#0a9da7] text-xl font-bold uppercase">Loading...</h2>
+            <p id="navEmail" class="text-[#0a9da7] text-[10px] opacity-80">Loading...</p>
+        </div>
+        <nav class="space-y-6 text-[#0a9da7]">
+            <div onclick="location.href='home.html'" class="sidebar-item">หน้าแรก</div>
+            <div onclick="location.href='analyze.html'" class="sidebar-item text-[#f1c443] font-bold">วิเคราะห์</div>
+            <div onclick="location.href='diary.html'" class="sidebar-item">บันทึก</div>
+            <div onclick="location.href='overview.html'" class="sidebar-item">ภาพรวม</div>
+            <div onclick="location.href='recommend.html'" class="sidebar-item">คำแนะนำ</div>
+            <div onclick="location.href='profile.html'" class="sidebar-item">บัญชีผู้ใช้</div>
+        </nav>
+        <div class="mt-auto">
+            <button onclick="logout()" class="text-[#f36942] text-sm hover:text-red-500 transition-colors">ออกจากระบบ</button>
+        </div>
+    </div>
+
+    <div class="flex-1 p-8 overflow-y-auto no-scrollbar">
+        <div class="w-full min-h-full bg-white dark:bg-[#1a1a1a] rounded-[3rem] flex flex-col items-center justify-center p-10 shadow-xl text-[#1a1a1a] dark:text-white transition-all duration-300">
+            
+            <h1 class="text-4xl text-[#0a9da7] font-bold mb-2 text-center">สวัสดี คุณรู้สึกอย่างไร ?</h1>
+            <p class="text-gray-400 dark:text-gray-500 mb-8 text-center">ให้เราช่วยวิเคราะห์อารมณ์จากข้อความของคุณ</p>
+
+            <div class="w-full max-w-2xl mb-12"> 
+                <div class="relative">
+                    <textarea id="moodInput" 
+                        placeholder="วันนี้คุณรู้สึกอย่างไร... ระบายออกมาได้เต็มที่เลยนะ" 
+                        class="w-full px-8 py-6 bg-gray-50 dark:bg-white/5 border-2 border-[#0a9da7] dark:border-[#0a9da7]/50 rounded-[2.5rem] focus:outline-none focus:ring-4 focus:ring-[#f1c443]/30 text-center text-lg min-h-[200px] resize-none transition-all dark:text-white"
+                    ></textarea>
+                </div>
+
+                <button onclick="analyzeMood()" class="mt-6 w-full bg-[#f36942] dark:bg-[#f36942] text-white dark:text-white py-4 rounded-full text-xl font-regular hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-[#0a9da7]/20 dark:shadow-[#f1c443]/10">
+                    เริ่มการวิเคราะห์ ✨
+                </button>
+            </div>
+
+            <div class="text-center w-full">
+                <p class="text-gray-400 dark:text-gray-500 mb-6 text-sm font-regular">หรือเลือกอารมณ์ของคุณเพื่อบันทึกโดยตรง</p>
+                <div class="flex flex-wrap justify-center gap-6">
+                    <button onclick="openModal('มีความรัก')" class="group flex flex-col items-center space-y-2 transition-all duration-300 transform hover:scale-125">
+                        <span class="text-5xl drop-shadow-md">😍</span>
+                        <span class="text-xs text-gray-500 group-hover:text-[#f36942] dark:group-hover:text-[#f1c443]">มีความรัก</span>
+                    </button>
+                    <button onclick="openModal('มีความสุข')" class="group flex flex-col items-center space-y-2 transition-all duration-300 transform hover:scale-125">
+                        <span class="text-5xl drop-shadow-md">😆</span>
+                        <span class="text-xs text-gray-500 group-hover:text-[#f36942] dark:group-hover:text-[#f1c443]">มีความสุข</span>
+                    </button>
+                    <button onclick="openModal('โอเคดี')" class="group flex flex-col items-center space-y-2 transition-all duration-300 transform hover:scale-125">
+                        <span class="text-5xl drop-shadow-md">😐</span>
+                        <span class="text-xs text-gray-500 group-hover:text-[#f36942] dark:group-hover:text-[#f1c443]">โอเคดี</span>
+                    </button>
+                    <button onclick="openModal('โกรธ')" class="group flex flex-col items-center space-y-2 transition-all duration-300 transform hover:scale-125">
+                        <span class="text-5xl drop-shadow-md">😡</span>
+                        <span class="text-xs text-gray-500 group-hover:text-[#f36942] dark:group-hover:text-[#f1c443]">โกรธ</span>
+                    </button>
+                    <button onclick="openModal('กังวล')" class="group flex flex-col items-center space-y-2 transition-all duration-300 transform hover:scale-125">
+                        <span class="text-5xl drop-shadow-md">😰</span>
+                        <span class="text-xs text-gray-500 group-hover:text-[#f36942] dark:group-hover:text-[#f1c443]">กังวล</span>
+                    </button>
+                    <button onclick="openModal('เศร้า')" class="group flex flex-col items-center space-y-2 transition-all duration-300 transform hover:scale-125">
+                        <span class="text-5xl drop-shadow-md">😭</span>
+                        <span class="text-xs text-gray-500 group-hover:text-[#f36942] dark:group-hover:text-[#f1c443]">เศร้า</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="recordModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all">
+        <div class="bg-white dark:bg-[#1a1a1a] w-full max-w-lg rounded-[2.5rem] shadow-2xl p-8 transform transition-all scale-90 opacity-0 border dark:border-white/10" id="modalContent">
+            <h2 class="text-2xl font-bold text-[#0a9da7] dark:text-[#f1c443] mb-6">บันทึกอารมณ์</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-2 ml-2">เลือกวันที่</label>
+                    <input type="date" id="modalDate" class="w-full p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-[#0a9da7] dark:text-white transition-all">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-2 ml-2">ข้อความบันทึก</label>
+                    <textarea id="modalText" placeholder="วันนี้เป็นอย่างไรบ้าง..." 
+                        class="w-full p-4 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-[#0a9da7] min-h-[150px] resize-none transition-all dark:text-white"></textarea>
+                </div>
+                <div class="flex items-center justify-between pt-4">
+                    <div id="selectedEmojiDisplay" class="flex items-center font-bold text-[#0a9da7] dark:text-white"></div>
+                </div>
+                <div class="flex gap-4 pt-6">
+                    <button onclick="closeModal()" class="flex-1 py-4 bg-gray-100 dark:bg-white/10 text-gray-500 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-white/20 transition-all">ยกเลิก</button>
+                    <button onclick="saveManualMood()" class="flex-1 py-4 bg-[#0a9da7] dark:bg-[#f1c443] text-white dark:text-black rounded-2xl font-bold shadow-lg shadow-[#0a9da7]/20 dark:shadow-none hover:scale-105 active:scale-95 transition-all">บันทึก</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedMoodName = "";
+        const modal = document.getElementById('recordModal');
+        const modalContent = document.getElementById('modalContent');
+        const display = document.getElementById('selectedEmojiDisplay');
+        const API_URL = 'http://localhost:3000'; 
+        const AI_MODEL_URL = 'http://localhost:5000/predict';
+
+        const emojiMap = { 
+            'มีความรัก': '😍', 'มีความสุข': '😆', 'โอเคดี': '😐', 
+            'โกรธ': '😡', 'กังวล': '😰', 'เศร้า': '😭' 
+        };
+
+        function getCleanUserId() { return localStorage.getItem('userId') || '1'; }
+
+        function openModal(moodName) {
+            selectedMoodName = moodName;
+            display.innerHTML = `<span class="text-4xl mr-2">${emojiMap[moodName]}</span> ${moodName}`;
+            document.getElementById('modalDate').valueAsDate = new Date();
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-90', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            modalContent.classList.add('scale-90', 'opacity-0');
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        async function saveManualMood() {
+            const text = document.getElementById('modalText').value;
+            const date = document.getElementById('modalDate').value;
+            const userId = getCleanUserId();
+            if (!date) return alert("กรุณาเลือกวันที่");
+
+            try {
+                const response = await fetch(`${API_URL}/api/save-diary`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        date: date,
+                        text: text || `บันทึกอารมณ์: ${selectedMoodName}`,
+                        mood: selectedMoodName,
+                        emoji: emojiMap[selectedMoodName] || '😐',
+                        is_analyzed: 0 
+                    })
+                });
+                if ((await response.json()).status === "Success") {
+                    location.href = 'diary.html';
+                }
+            } catch (err) { alert("บันทึกไม่สำเร็จ"); }
+        }
+
+        async function analyzeMood() {
+            const textInput = document.getElementById('moodInput').value;
+            const btn = document.querySelector('button[onclick="analyzeMood()"]');
+            if (!textInput.trim()) return alert("กรุณาป้อนความรู้สึกก่อนนะคะ");
+
+            btn.innerText = "กำลังวิเคราะห์...";
+            btn.disabled = true;
+
+            try {
+                const aiRes = await fetch(AI_MODEL_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: textInput })
+                });
+                const aiData = await aiRes.json();
+                const moodLabel = aiData.label || aiData.mood;
+
+                if (moodLabel) {
+                    const saveRes = await fetch(`${API_URL}/api/save-diary`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: getCleanUserId(),
+                            date: new Date().toISOString().split('T')[0],
+                            text: textInput,
+                            mood: moodLabel,
+                            emoji: emojiMap[moodLabel] || '✨', 
+                            is_analyzed: 1 
+                        })
+                    });
+                    if ((await saveRes.json()).status === "Success") {
+                        alert(`วิเคราะห์และบันทึกสำเร็จ! อารมณ์ของคุณคือ: ${moodLabel}`);
+                        location.href = 'diary.html';
+                    }
+                }
+            } catch (error) {
+                alert("ไม่สามารถติดต่อเซิร์ฟเวอร์ AI ได้");
+                btn.innerText = "เริ่มการวิเคราะห์ ✨";
+                btn.disabled = false;
+            }
+        }
+
+        async function updateGlobalProfile() {
+            try {
+                const res = await fetch(`${API_URL}/api/user/${getCleanUserId()}`);
+                const data = await res.json();
+                if (data.status === "Success") {
+                    document.getElementById('navUsername').innerText = data.user.username;
+                    document.getElementById('navEmail').innerText = data.user.email;
+                    if (data.user.profile_image) document.getElementById('navProfilePic').src = `${API_URL}/uploads/${data.user.profile_image}`;
+                }
+            } catch (err) {}
+        }
+
+        function logout() { localStorage.clear(); location.href = 'login.html'; }
+        window.onload = updateGlobalProfile;
+    </script>
+</body>
+</html>

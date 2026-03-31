@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Moodiary - Home</title>
+    <style>
+        @font-face { 
+            font-family: 'biscuit2'; 
+            src: url('../assets/fonts/biscuit2.ttf') format('opentype'); 
+        }
+        body { font-family: 'biscuit2', sans-serif; transition: background-color 0.3s; }
+        .sidebar-item:hover { color: #f1c443; cursor: pointer; transition: 0.3s; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="flex h-screen overflow-hidden bg-[#e2ddc7] dark:bg-[#121212] transition-colors duration-300">
+
+    <div class="w-64 bg-[#e2ddc7] dark:bg-[#1a1a1a] flex flex-col p-8 transition-colors">
+        <div class="mb-12">
+            <div class="w-16 h-16 bg-[#eeede9] dark:bg-gray-700 rounded-xl mb-4 overflow-hidden shadow-lg">
+                <img id="navProfilePic" src="https://via.placeholder.com/200" alt="profile" class="w-full h-full object-cover">
+            </div>
+            <h2 id="navUsername" class="text-[#0a9da7] text-xl font-bold uppercase">Loading...</h2>
+            <p id="navEmail" class="text-[#0a9da7] text-[10px] opacity-80">Loading...</p>
+        </div>
+
+        <nav class="space-y-6 text-[#0a9da7]">
+            <div onclick="location.href='home.html'" class="sidebar-item text-[#f1c443] font-bold">หน้าแรก</div>
+            <div onclick="location.href='analyze.html'" class="sidebar-item">วิเคราะห์</div>
+            <div onclick="location.href='diary.html'" class="sidebar-item">บันทึก</div>
+            <div onclick="location.href='overview.html'" class="sidebar-item">ภาพรวม</div>
+            <div onclick="location.href='recommend.html'" class="sidebar-item">คำแนะนำ</div>
+            <div onclick="location.href='profile.html'" class="sidebar-item">บัญชีผู้ใช้</div>
+        </nav>
+
+        <div class="mt-auto">
+            <button onclick="logout()" class="text-[#f36942] text-sm hover:text-red-500 transition-colors">ออกจากระบบ</button>
+        </div>
+    </div>
+
+    <div class="flex-1 p-8 overflow-y-auto no-scrollbar">
+        <div class="w-full h-full bg-white dark:bg-[#1a1a1a] rounded-[3rem] flex flex-col items-center justify-center text-[#1a1a1a] dark:text-white shadow-xl transition-all duration-300">
+            
+            <h1 class="text-5xl font-bold text-[#0a9da7] tracking-widest mb-2">MOODIARY</h1>
+            <p class="text-gray-500 dark:text-gray-400 text-lg mb-16">วันนี้คุณรู้สึกอย่างไร ?</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 px-10 w-full max-w-6xl">
+
+                <div onclick="location.href='analyze.html'" 
+                     class="group relative flex flex-col items-center justify-center p-8 
+                            bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2.5rem] 
+                            cursor-pointer transition-all duration-300
+                            hover:border-[#f36942] dark:hover:border-[#f1c443]
+                            hover:shadow-[0_0_25px_rgba(241,196,67,0.2)] hover:-translate-y-2">
+                    <div class="text-4xl mb-4 transition-transform duration-300 group-hover:scale-110">🔍</div>
+                    <h3 class="text-[#f36942] dark:text-[#f1c443] font-bold text-lg mb-1">วิเคราะห์อารมณ์</h3>
+                    <p class="text-zinc-500 dark:text-gray-400 text-[12px] text-center">ตรวจสอบสภาวะอารมณ์</p>
+                </div>
+
+                <div onclick="location.href='diary.html'" 
+                     class="group relative flex flex-col items-center justify-center p-8 
+                            bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2.5rem] 
+                            cursor-pointer transition-all duration-300
+                            hover:border-[#f36942] dark:hover:border-[#f1c443]
+                            hover:shadow-[0_0_25px_rgba(241,196,67,0.2)] hover:-translate-y-2">
+                    <div class="text-4xl mb-4 transition-transform duration-300 group-hover:scale-110">📝</div>
+                    <h3 class="text-[#f36942] dark:text-[#f1c443] font-bold text-lg mb-1">บันทึกอารมณ์</h3>
+                    <p class="text-zinc-500 dark:text-gray-400 text-[12px] text-center">บันทึกเรื่องราวในแต่ละวัน</p>
+                </div>
+
+                <div onclick="location.href='overview.html'" 
+                     class="group relative flex flex-col items-center justify-center p-8 
+                            bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2.5rem] 
+                            cursor-pointer transition-all duration-300
+                            hover:border-[#f36942] dark:hover:border-[#f1c443]
+                            hover:shadow-[0_0_25px_rgba(241,196,67,0.2)] hover:-translate-y-2">
+                    <div class="text-4xl mb-4 transition-transform duration-300 group-hover:scale-110">📊</div>
+                    <h3 class="text-[#f36942] dark:text-[#f1c443] font-bold text-lg mb-1">ภาพรวม</h3>
+                    <p class="text-zinc-500 dark:text-gray-400 text-[12px] text-center">สรุปผลตลอดสัปดาห์</p>
+                </div>
+
+                <div onclick="location.href='recommend.html'" 
+                     class="group relative flex flex-col items-center justify-center p-8 
+                            bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2.5rem] 
+                            cursor-pointer transition-all duration-300
+                            hover:border-[#f36942] dark:hover:border-[#f1c443]
+                            hover:shadow-[0_0_25px_rgba(241,196,67,0.2)] hover:-translate-y-2">
+                    <div class="text-4xl mb-4 transition-transform duration-300 group-hover:scale-110">💬</div>
+                    <h3 class="text-[#f36942] dark:text-[#f1c443] font-bold text-lg mb-1">คำแนะนำ</h3>
+                    <p class="text-zinc-500 dark:text-gray-400 text-[12px] text-center">บทความสั้นๆ สำหรับคุณ</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            updateGlobalProfile();
+        };
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        async function updateGlobalProfile() {
+            const userId = localStorage.getItem('userId') || 1; 
+            const API_URL = 'http://localhost:3000'; 
+
+            try {
+                const response = await fetch(`${API_URL}/api/user/${userId}`);
+                const data = await response.json();
+
+                if (data.status === "Success") {
+                    const user = data.user;
+                    const imgUrl = user.profile_image 
+                        ? `${API_URL}/uploads/${user.profile_image}` 
+                        : "https://via.placeholder.com/200";
+
+                    document.getElementById('navProfilePic').src = imgUrl;
+                    document.getElementById('navUsername').innerText = user.username;
+                    document.getElementById('navEmail').innerText = user.email;
+                }
+            } catch (err) {
+                console.error("Error updating profile:", err);
+            }
+        }
+    </script>
+</body>
+</html>

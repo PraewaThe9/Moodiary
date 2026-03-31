@@ -1,0 +1,20 @@
+/* src/input.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ประกาศฟอนต์ภาษาอังกฤษ */
+@font-face {
+  font-family: 'Lazy Dog';
+  src: url('./fonts/LazyDog.otf') format('truetype'); /* เปลี่ยนชื่อไฟล์ให้ตรงกับในเครื่องคุณ */
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* ประกาศฟอนต์ภาษาไทย */
+@font-face {
+  font-family: 'Biscuit';
+  src: url('./fonts/Biscuit2.ttf') format('truetype'); /* ถ้าไฟล์เป็น .otf ให้เปลี่ยน format เป็น 'opentype' */
+  font-weight: normal;
+  font-style: normal;
+}

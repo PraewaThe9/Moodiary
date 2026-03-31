@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Moodiary - Overview</title>
+    <style>
+        @font-face { font-family: 'biscuit2'; src: url('../assets/fonts/biscuit2.ttf') format('opentype'); }
+        body { font-family: 'biscuit2', sans-serif; transition: background-color 0.3s; }
+        .sidebar-item:hover { color: #0a9da7; cursor: pointer; transition: 0.3s; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .month-card { cursor: pointer; transition: all 0.2s; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="flex h-screen overflow-hidden bg-[#e2ddc7] dark:bg-[#121212] transition-colors duration-300">
+
+    <div class="w-64 bg-[#e2ddc7] dark:bg-[#1a1a1a] flex flex-col p-8 transition-colors">
+        <div class="mb-12">
+            <div class="w-16 h-16 bg-gray-600 rounded-xl mb-4 overflow-hidden shadow-lg">
+                <img id="navProfilePic" src="https://via.placeholder.com/200" alt="profile" class="w-full h-full object-cover">
+            </div>
+            <h2 id="navUsername" class="text-[#0a9da7] text-xl font-bold uppercase">Loading...</h2>
+            <p id="navEmail" class="text-[#0a9da7] text-[10px] opacity-80">Loading...</p>
+        </div>
+        <nav class="space-y-6 text-[#0a9da7]">
+            <div onclick="location.href='home.html'" class="sidebar-item">หน้าแรก</div>
+            <div onclick="location.href='analyze.html'" class="sidebar-item">วิเคราะห์</div>
+            <div onclick="location.href='diary.html'" class="sidebar-item">บันทึก</div>
+            <div onclick="location.href='overview.html'" class="sidebar-item text-[#f1c443] font-bold">ภาพรวม</div>
+            <div onclick="location.href='recommend.html'" class="sidebar-item">คำแนะนำ</div>
+            <div onclick="location.href='profile.html'" class="sidebar-item">บัญชีผู้ใช้</div>
+        </nav>
+        <div class="mt-auto">
+            <button onclick="logout()" class="text-[#f36942] text-sm hover:text-red-500 transition-colors">ออกจากระบบ</button>
+        </div>
+    </div>
+
+    <div class="flex-1 p-6">
+        <div class="w-full h-full bg-white dark:bg-[#1a1a1a] rounded-[3rem] flex overflow-hidden text-[#1a1a1a] dark:text-white shadow-xl transition-all duration-300">
+            
+            <div class="flex-1 p-12 overflow-y-auto no-scrollbar border-r border-gray-100 dark:border-white/5">
+                <header class="mb-8">
+                    <h1 class="text-4xl font-bold text-[#0a9da7]">สรุปภาพรวม</h1>
+                    <p id="currentViewLabel" class="text-gray-400 dark:text-gray-500 text-sm mt-1">กำลังโหลดข้อมูล...</p>
+                </header>
+
+                <div class="space-y-8">
+                    <div class="bg-gray-50/50 dark:bg-white/5 p-6 rounded-[2rem] border border-gray-50 dark:border-white/5">
+                        <h3 class="text-[#f36942] dark:text-[#f1c443] font-Regular mb-4">แนวโน้มความสุขรายวัน</h3>
+                        <canvas id="lineChart" height="120"></canvas>
+                    </div>
+
+                    <div class="bg-gray-50/50 dark:bg-white/5 p-6 rounded-[2rem] border border-gray-50 dark:border-white/5">
+                        <h3 class="text-[#f36942] dark:text-[#f1c443] font-Regular mb-4">สัดส่วนอารมณ์</h3>
+                        <div class="flex flex-col md:flex-row items-center justify-around">
+                            <div class="w-48 h-48">
+                                <canvas id="pieChart"></canvas>
+                            </div>
+                            <div id="moodLegend" class="space-y-2 mt-6 md:mt-0 w-48"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-80 bg-[#f8fafc]/50 dark:bg-[#121212]/30 p-8 overflow-y-auto no-scrollbar">
+                <h2 class="text-2xl font-Regular mb-6 text-[#f36942]">เดือน</h2>
+                <div id="monthFilterList" class="space-y-4">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        let lineChart, pieChart;
+        
+        // สถานะปัจจุบันของ Filter
+        let currentFilter = {
+            month: new Date().getMonth() + 1,
+            year: new Date().getFullYear()
+        };
+
+        const moodColors = {
+            'มีความสุข': '#6ee7b7',
+            'โอเคดี': '#fcd34d',
+            'มีความรัก': '#f9a8d4',
+            'เศร้า': '#93c5fd',
+            'โกรธ': '#f87171',
+            'กังวล': '#a78bfa'
+        };
+
+        const getChartTextColor = () => document.documentElement.classList.contains('dark') ? '#9ca3af' : '#6b7280';
+
+        // ดึงข้อมูลภาพรวม (Stats & Timeline)
+        async function fetchOverviewData(month, year) {
+            const userId = localStorage.getItem('userId') || '1';
+            try {
+                const res = await fetch(`${API_URL}/api/overview/${userId}?month=${month}&year=${year}`);
+                const result = await res.json();
+                if (result.status === "Success") {
+                    updateCharts(result.data.stats, result.data.timeline);
+                    updateLegend(result.data.stats);
+                    document.getElementById('currentViewLabel').innerText = `ข้อมูลเดือน ${getMonthNameThai(month)} ${year}`;
+                }
+            } catch (err) {
+                console.error("Error loading overview data:", err);
+            }
+        }
+
+        // จัดการเมื่อคลิกเลือกเดือน
+        function selectMonth(month, year) {
+            currentFilter.month = month;
+            currentFilter.year = year;
+            fetchOverviewData(month, year);
+            fetchAvailableMonths(); // วาดรายการเดือนใหม่เพื่ออัปเดตสี Highlight
+        }
+
+        // ดึงรายการเดือนที่มีบันทึก และจัดการ UI ให้เหมือนหน้า diary
+        async function fetchAvailableMonths() {
+            const userId = localStorage.getItem('userId') || '1';
+            const container = document.getElementById('monthFilterList');
+            try {
+                const res = await fetch(`${API_URL}/api/diary-months/${userId}`);
+                const result = await res.json();
+                if (result.status === "Success") {
+                    container.innerHTML = result.data.map(item => {
+                        const thaiMonth = getMonthNameThai(item.month_num);
+                        const isSelected = currentFilter.month == item.month_num && currentFilter.year == item.year_num;
+                        
+                        return `
+                            <div onclick="selectMonth('${item.month_num}', '${item.year_num}')" 
+                                 class="month-card cursor-pointer p-5 rounded-[2rem] shadow-sm border-2 transition-all hover:scale-105 
+                                 ${isSelected 
+                                    ? 'bg-[#f1c443] border-[#f1c443] shadow-md' 
+                                    : 'bg-transparent border-[#0a9da7] dark:border-white/10 text-[#0a9da7] dark:text-white'}">
+                                <p class="font-Regular ${isSelected ? 'text-white' : 'text-[#0a9da7] dark:text-white'}">
+                                    ${thaiMonth}
+                                </p>
+                                <p class="text-[10px] ${isSelected ? 'text-white/60' : 'text-[#0a9da7] dark:text-white/60'}">
+                                    ปี ${item.year_num}
+                                </p>
+                            </div>`;
+                    }).join('');
+                }
+            } catch (err) {
+                console.error("Error fetching months:", err);
+            }
+        }
+
+        function updateCharts(stats, timeline) {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = getChartTextColor();
+
+            const ctxLine = document.getElementById('lineChart').getContext('2d');
+            if (lineChart) lineChart.destroy();
+            lineChart = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: timeline.map(t => t.day),
+                    datasets: [{
+                        data: timeline.map(t => t.score),
+                        borderColor: '#f1c443',
+                        backgroundColor: isDark ? 'rgba(241, 196, 67, 0.05)' : 'rgba(241, 196, 67, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#f1c443'
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        y: { 
+                            min: 0, max: 5, 
+                            ticks: { stepSize: 1, color: textColor },
+                            grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }
+                        }, 
+                        x: { 
+                            ticks: { color: textColor },
+                            grid: { display: false } 
+                        } 
+                    }
+                }
+            });
+
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            if (pieChart) pieChart.destroy();
+            pieChart = new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: stats.map(s => s.mood),
+                    datasets: [{
+                        data: stats.map(s => s.count),
+                        backgroundColor: stats.map(s => moodColors[s.mood] || '#cbd5e1'),
+                        borderWidth: isDark ? 2 : 0,
+                        borderColor: '#1a1a1a',
+                        cutout: '75%'
+                    }]
+                },
+                options: { 
+                    plugins: { legend: { display: false } },
+                    animation: { animateRotate: true }
+                }
+            });
+        }
+
+        function updateLegend(stats) {
+            const container = document.getElementById('moodLegend');
+            const total = stats.reduce((acc, curr) => acc + curr.count, 0);
+            container.innerHTML = stats.map(s => `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 rounded-full mr-2 shadow-sm" style="background-color: ${moodColors[s.mood]}"></span>
+                        <span class="text-sm dark:text-gray-300">${s.mood}</span>
+                    </div>
+                    <span class="text-sm font-bold dark:text-[#f1c443]">${((s.count/total)*100).toFixed(1)}%</span>
+                </div>
+            `).join('');
+        }
+
+        function getMonthNameThai(m) {
+            const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            return months[parseInt(m) - 1];
+        }
+
+        async function updateGlobalProfile() {
+            const userId = localStorage.getItem('userId') || 1;
+            try {
+                const response = await fetch(`${API_URL}/api/user/${userId}`);
+                const data = await response.json();
+                if (data.status === "Success") {
+                    document.getElementById('navProfilePic').src = data.user.profile_image ? `${API_URL}/uploads/${data.user.profile_image}` : "https://via.placeholder.com/200";
+                    document.getElementById('navUsername').innerText = data.user.username;
+                    document.getElementById('navEmail').innerText = data.user.email;
+                }
+            } catch (err) {}
+        }
+
+        window.onload = () => {
+            updateGlobalProfile();
+            fetchAvailableMonths();
+            fetchOverviewData(currentFilter.month, currentFilter.year);
+        };
+    </script>
+</body>
+</html>

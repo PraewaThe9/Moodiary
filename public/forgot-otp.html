@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>ยืนยัน OTP - Moodiary</title>
+    <style>
+        @font-face { 
+            font-family: 'biscuit2'; 
+            src: url('../assets/fonts/biscuit2.ttf') format('opentype'); 
+        }
+        body { font-family: 'biscuit2', sans-serif; }
+        
+        /* ซ่อนลูกศรเพิ่ม/ลดตัวเลขใน input type number */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="bg-[#e7e1ca] flex items-center justify-center min-h-screen p-4">
+    <div class="bg-black w-full max-w-4xl flex flex-col md:flex-row rounded-[2.5rem] overflow-hidden shadow-2xl ">
+        
+        <div class="md:w-[25%] bg-[#e7e1ca] p-10 flex flex-col items-start justify-start">
+            <div class="w-14 h-14 bg-white rounded-2xl mb-6 shadow-lg shadow-white/5 flex items-center justify-center overflow-hidden">
+                <img src="../assets/images/Moodairylogo.png" alt="Logo" class="w-full h-full object-contain p-2">
+            </div> 
+            <h2 class="text-[#f36942] text-2xl font-medium">Verify</h2>
+            <p class="text-[#0a9da7] text-sm mt-1">OTP Code</p>
+        </div>
+
+        <div class="md:w-3/4 bg-white p-8 md:p-14 text-center">
+            <h1 class="text-3xl font-bold text-[#0a9da7] tracking-widest mb-4">ยืนยันรหัส OTP</h1>
+            <p class="text-gray-400 text-sm mb-10">กรุณากรอกรหัส 6 หลักที่ส่งไปยังอีเมลของคุณ</p>
+            
+            <form id="otpForm">
+                <div class="flex gap-2 md:gap-4 mb-10 justify-center">
+                    <input type="text" maxlength="1" class="otp-input w-10 h-14 md:w-12 md:h-16 border-2 border-gray-300 rounded-xl text-center text-2xl font-bold focus:border-[#f36942] outline-none transition-all">
+                    <input type="text" maxlength="1" class="otp-input w-10 h-14 md:w-12 md:h-16 border-2 border-gray-300 rounded-xl text-center text-2xl font-bold focus:border-[#f36942] outline-none transition-all">
+                    <input type="text" maxlength="1" class="otp-input w-10 h-14 md:w-12 md:h-16 border-2 border-gray-300 rounded-xl text-center text-2xl font-bold focus:border-[#f36942] outline-none transition-all">
+                    <input type="text" maxlength="1" class="otp-input w-10 h-14 md:w-12 md:h-16 border-2 border-gray-300 rounded-xl text-center text-2xl font-bold focus:border-[#f36942] outline-none transition-all">
+                    <input type="text" maxlength="1" class="otp-input w-10 h-14 md:w-12 md:h-16 border-2 border-gray-300 rounded-xl text-center text-2xl font-bold focus:border-[#f36942] outline-none transition-all">
+                    <input type="text" maxlength="1" class="otp-input w-10 h-14 md:w-12 md:h-16 border-2 border-gray-300 rounded-xl text-center text-2xl font-bold focus:border-[#f36942] outline-none transition-all">
+                </div>
+
+                <button type="submit" class="w-full bg-[#f36942] hover:bg-[#ffd25a] text-[#fff] py-3.5 rounded-full font-Regular shadow-lg transition-all active:scale-95">
+                    ตรวจสอบรหัส
+                </button>
+
+                <div class="mt-4">
+                    <p id="timerText" class="text-sm text-[#f36942]">ส่งรหัสอีกครั้งในหน้าปัด <span id="timer" class="font-bold text-[#f36942]">30</span> วินาที</p>
+                    <button type="button" id="resendBtn" onclick="resendOTP()" disabled 
+                            class="hidden text-sm font-bold text-[#f36942] hover:underline mt-2">
+                        ส่งรหัส OTP อีกครั้ง
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let timeLeft = 30;
+        const timerSpan = document.getElementById('timer');
+        const timerText = document.getElementById('timerText');
+        const resendBtn = document.getElementById('resendBtn');
+        const otpInputs = document.querySelectorAll('.otp-input');
+        const email = localStorage.getItem('resetEmail');
+
+        // ตรวจสอบเซสชัน
+        if (!email) {
+            alert("เซสชันหมดอายุ");
+            window.location.href = 'forgot-password.html';
+        }
+
+        // --- ระบบเลื่อนช่องอัตโนมัติ (แก้ไขใหม่) ---
+        otpInputs.forEach((input, index) => {
+            // พิมพ์แล้วเลื่อนไปข้างหน้า
+            input.addEventListener('input', (e) => {
+                if (input.value && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+
+            // จัดการการลบ และปุ่มลูกศร
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !input.value && index > 0) {
+                    otpInputs[index - 1].focus();
+                } else if (e.key === 'ArrowLeft' && index > 0) {
+                    otpInputs[index - 1].focus();
+                } else if (e.key === 'ArrowRight' && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+
+            // รองรับการ Paste รหัส 6 หลัก
+            input.addEventListener('paste', (e) => {
+                const data = e.clipboardData.getData('text').slice(0, 6);
+                if (!/^\d+$/.test(data)) return;
+
+                data.split('').forEach((char, i) => {
+                    if (otpInputs[index + i]) otpInputs[index + i].value = char;
+                });
+                
+                const nextIndex = index + data.length;
+                if (otpInputs[nextIndex]) otpInputs[nextIndex].focus();
+                else otpInputs[otpInputs.length - 1].focus();
+                
+                e.preventDefault();
+            });
+        });
+
+        // ตัวนับถอยหลัง (ย้ายมาไว้นอก Loop)
+        function startTimer() {
+            const countdown = setInterval(() => {
+                timeLeft--;
+                timerSpan.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    timerText.classList.add('hidden');
+                    resendBtn.classList.remove('hidden');
+                    resendBtn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        // ส่งรหัสอีกครั้ง
+        async function resendOTP() {
+            try {
+                const response = await fetch('http://localhost:3000/forgot-password', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email })
+                });
+                if (response.ok) {
+                    alert("ส่งรหัสใหม่แล้ว!");
+                    location.reload(); 
+                }
+            } catch (err) { alert("ติดต่อเซิร์ฟเวอร์ไม่ได้"); }
+        }
+
+        // ตรวจสอบ OTP
+        document.getElementById('otpForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // รวมรหัสจาก 6 ช่องเป็น String เดียว
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+
+            if (otp.length < 6) {
+                alert("กรุณากรอกรหัสให้ครบ 6 หลัก");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/verify-reset-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email, otp })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('tempOTP', otp);
+                    window.location.href = 'new-password.html';
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert("ติดต่อเซิร์ฟเวอร์ไม่ได้");
+            }
+        });
+
+        // เริ่มทำงาน
+        startTimer();
+    </script>
+</body>
+</html>

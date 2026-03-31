@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>บัญชีผู้ใช้ - Moodiary</title>
+    <style>
+        @font-face { 
+            font-family: 'biscuit2'; 
+            src: url('../assets/fonts/biscuit2.ttf') format('opentype'); 
+        }
+        body { font-family: 'biscuit2', sans-serif; transition: background-color 0.3s; }
+        .sidebar-item:hover { color: #f1c443; cursor: pointer; transition: 0.3s; }
+        
+        /* สไตล์ Input ที่เปลี่ยนตาม Dark Mode */
+        .input-field { 
+            background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 1.25rem; 
+            padding: 1rem 1.5rem; width: 100%; color: #334155; outline: none; transition: 0.3s; 
+        }
+        .dark .input-field { background: #262626; border-color: #404040; color: #e2e8f0; }
+        .input-field:focus { border-color: #0a9da7; box-shadow: 0 0 0 4px rgba(10, 157, 167, 0.1); }
+        
+        .btn-save { 
+            background: #0a9da7; color: #fff; padding: 1rem 2.5rem; border-radius: 1.25rem; 
+            transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: none; cursor: pointer; 
+        }
+        .btn-save:hover { background: #ffd25a; transform: translateY(-2px); color: #1a1a1a; }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+        // เช็คธีมทันทีเพื่อป้องกันหน้าจอขาวแวบขึ้นมา
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</head>
+<body class="flex h-screen overflow-hidden bg-[#e2ddc7] dark:bg-[#121212] transition-colors duration-300">
+
+    <div class="w-64 bg-[#e2ddc7] dark:bg-[#1a1a1a] flex flex-col p-8 transition-colors">
+        <div class="mb-12">
+            <div class="w-16 h-16 bg-white dark:bg-gray-700 rounded-2xl mb-4 overflow-hidden shadow-lg">
+                <img id="sideProfilePic" src="https://via.placeholder.com/200" alt="profile" class="w-full h-full object-cover">
+            </div>
+            <h2 id="sideUsername" class="text-[#0a9da7] text-xl font-bold uppercase tracking-tight">Loading...</h2>
+            <p id="sideEmail" class="text-[#0a9da7] text-[10px] break-all opacity-80">Loading...</p>
+        </div>
+        <nav class="space-y-6 text-[#0a9da7]">
+            <div onclick="location.href='home.html'" class="sidebar-item">หน้าแรก</div>
+            <div onclick="location.href='analyze.html'" class="sidebar-item">วิเคราะห์</div>
+            <div onclick="location.href='diary.html'" class="sidebar-item">บันทึก</div>
+            <div onclick="location.href='overview.html'" class="sidebar-item">ภาพรวม</div>
+            <div onclick="location.href='recommend.html'" class="sidebar-item">คำแนะนำ</div>
+            <div onclick="location.href='profile.html'" class="sidebar-item text-[#f1c443] font-bold">บัญชีผู้ใช้</div>
+        </nav>
+        <div class="mt-auto">
+            <button onclick="logout()" class="text-[#f36942] text-sm hover:text-red-500 transition-colors">ออกจากระบบ</button>
+        </div>
+    </div>
+
+    <div class="flex-1 p-6">
+        <div id="contentCard" class="w-full h-full bg-white dark:bg-[#1a1a1a] rounded-[3rem] flex flex-col overflow-hidden text-[#1a1a1a] dark:text-white shadow-2xl p-12 transition-all duration-300">
+            
+            <header class="mb-10">
+                <h1 class="text-4xl font-bold text-[#0a9da7] tracking-tight">ตั้งค่าบัญชี</h1>
+                <p class="text-gray-400 dark:text-gray-500 text-sm mt-2 font-medium">จัดการข้อมูลส่วนตัวและความปลอดภัยของบัญชีคุณ</p>
+                <div class="h-1 w-20 bg-[#f1c443] mt-6 rounded-full"></div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto no-scrollbar pr-4">
+                <div class="max-w-2xl">
+                    <section class="mb-12">
+                        <h3 class="text-xs font-bold mb-6 text-gray-400 dark:text-gray-600 uppercase tracking-widest">รูปโปรไฟล์</h3>
+                        <div class="flex items-center space-x-8 bg-gray-50 dark:bg-white/5 p-6 rounded-[2rem] border border-gray-100 dark:border-white/10">
+                            <div class="relative group">
+                                <div class="w-28 h-28 rounded-[2rem] overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl">
+                                    <img id="mainProfilePic" src="https://via.placeholder.com/200" class="w-full h-full object-cover">
+                                </div>
+                                <button onclick="document.getElementById('uploadPic').click()" class="absolute -bottom-2 -right-2 bg-[#1a1a1a] dark:bg-[#f1c443] text-white dark:text-black p-2 rounded-xl shadow-lg hover:scale-110 transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                </button>
+                            </div>
+                            <div>
+                                <input type="file" id="uploadPic" class="hidden" accept="image/*">
+                                <h4 class="font-bold text-[#f36942] dark:text-[#f36942] text-lg">เปลี่ยนรูปภาพของคุณ</h4>
+                                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1 font-medium leading-relaxed">อัปโหลดไฟล์ JPG หรือ PNG (สูงสุด 2MB)</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="space-y-8">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-[11px] font-bold text-gray-400 ml-4 mb-2 block uppercase tracking-wider">Username</label>
+                                <input type="text" id="inputName" class="input-field" placeholder="ชื่อของคุณ">
+                            </div>
+                            <div>
+                                <label class="text-[11px] font-bold text-gray-400 ml-4 mb-2 block uppercase tracking-wider">Email</label>
+                                <input type="email" id="inputEmail" class="input-field" placeholder="example@ku.th">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[11px] font-bold text-gray-400 ml-4 mb-2 block uppercase tracking-wider">Security</label>
+                            <button onclick="location.href='forgot-password.html'" class="w-full bg-[#f8fafc] dark:bg-white/5 border border-gray-100 dark:border-white/10 p-5 rounded-[1.5rem] flex items-center justify-between group hover:border-[#f1c443] transition-all">
+                                <div class="flex items-center space-x-4">
+                                    <div class="bg-white dark:bg-gray-800 p-3 rounded-xl shadow-sm group-hover:bg-[#f1c443]/10">
+                                        <svg class="w-5 h-5 text-gray-400 group-hover:text-[#f1c443]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <p class="font-bold text-[#f36942] dark:text-[#f36942] text-sm">เปลี่ยนรหัสผ่าน</p>
+                                        <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium">ยืนยันตัวตนผ่าน OTP ในขั้นตอนถัดไป</p>
+                                    </div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-300 dark:text-gray-700 group-hover:text-[#f1c443] transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </button>
+                        </div>
+
+                        <div class="pt-6 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
+                            <button onclick="saveProfile()" class="btn-save font-bold">บันทึกข้อมูล</button>
+                            <button onclick="logout()" class="text-red-400 dark:text-red-500 text-sm font-bold hover:underline transition">ออกจากระบบ</button>
+                        </div>
+                    </section>
+
+                    <section class="mt-12 bg-[#f36942] dark:bg-[#1a1a1a] dark:border dark:border-white/10 text-white rounded-[2.5rem] p-10 shadow-xl">
+                        <h3 class="text-xs font-bold mb-8 text-white/70 uppercase tracking-[0.2em]">Application Settings</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between pb-6 border-b border-white/10">
+                                <div>
+                                    <p class="font-bold text-lg text-white">Dark Mode</p>
+                                    <p class="text-xs text-white/70 mt-1">ถนอมสายตาด้วยโทนสีเข้ม</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-white/20 peer-focus:outline-none rounded-full 
+                                    peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                                    after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0a9da7]"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-bold text-lg text-white">Daily Reminder</p>
+                                    <p class="text-xs text-white/70 mt-1">แจ้งเตือนบันทึกอารมณ์เวลา 20:00 น.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked class="sr-only peer">
+                                    <div class="w-11 h-6 bg-white/20 rounded-full peer peer-checked:after:translate-x-full 
+                                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] 
+                                    after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0a9da7]"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:3000";
+        let selectedFile = null;
+
+        async function loadProfileData() {
+            const userId = localStorage.getItem('userId') || 1; 
+            try {
+                const response = await fetch(`${API_URL}/api/user/${userId}`);
+                const data = await response.json();
+                if (data.status === "Success") {
+                    const user = data.user;
+                    const imgUrl = user.profile_image ? `${API_URL}/uploads/${user.profile_image}` : "https://via.placeholder.com/200";
+                    document.getElementById('sideUsername').innerText = user.username;
+                    document.getElementById('sideEmail').innerText = user.email;
+                    document.getElementById('sideProfilePic').src = imgUrl;
+                    document.getElementById('inputName').value = user.username;
+                    document.getElementById('inputEmail').value = user.email;
+                    document.getElementById('mainProfilePic').src = imgUrl;
+                }
+            } catch (err) { console.error("Fetch error:", err); }
+        }
+
+        document.getElementById('uploadPic').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = e => document.getElementById('mainProfilePic').src = e.target.result;
+                reader.readAsDataURL(file);
+            }
+        });
+
+        async function saveProfile() {
+            const newName = document.getElementById('inputName').value.trim();
+            const newEmail = document.getElementById('inputEmail').value.trim();
+            const userId = localStorage.getItem('userId') || 1;
+
+            if (!newName || !newEmail) return alert("กรุณากรอกข้อมูลให้ครบถ้วนค่ะ");
+
+            const formData = new FormData();
+            formData.append('userId', userId);
+            formData.append('username', newName);
+            formData.append('email', newEmail);
+            if (selectedFile) formData.append('profile_image', selectedFile);
+
+            try {
+                const response = await fetch(`${API_URL}/api/update-profile`, { method: 'POST', body: formData });
+                const result = await response.json();
+                if (result.status === "Success") {
+                    alert('🎉 บันทึกเรียบร้อยแล้ว!');
+                    loadProfileData(); 
+                }
+            } catch (err) { alert("ไม่สามารถเชื่อมต่อ Server ได้"); }
+        }
+
+        // ฟังก์ชัน Toggle Dark Mode ที่ใช้งาน Tailwind Class
+        function toggleDarkMode() {
+            const isDark = document.getElementById('darkModeToggle').checked;
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        function logout() {
+            if(confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) { 
+                localStorage.clear();
+                window.location.href = 'welcome.html'; 
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            const toggle = document.getElementById('darkModeToggle');
+            if (savedTheme === 'dark') {
+                toggle.checked = true;
+                document.documentElement.classList.add('dark');
+            }
+            loadProfileData();
+        });
+    </script>
+</body>
+</html>

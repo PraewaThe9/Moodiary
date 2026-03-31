@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>สมัครสมาชิก - Moodiary</title>
+    <style>
+        @font-face {
+            font-family: 'biscuit2';
+            src: url('../assets/fonts/biscuit2.ttf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'biscuit2', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-[#e7e1ca] flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-black w-full max-w-4xl flex flex-col md:flex-row rounded-[2.5rem] overflow-hidden shadow-2xl ">
+        
+        <!-- Sidebar ด้านข้าง -->
+        <div class="md:w-[25%] bg-[#e7e1ca] p-10 flex flex-col items-start justify-start ">
+            <div class="w-14 h-14 bg-white rounded-2xl mb-6 shadow-lg shadow-white/5 flex items-center justify-center overflow-hidden">
+    <img src="../assets/images/Moodairylogo.png" alt="Logo" class="w-full h-full object-contain p-2">
+</div> 
+            <h2 class="text-[#0a9da7] text-2xl font-medium">สมัครสมาชิก</h2>
+            <p class="text-[#f36942] text-sm mt-1">เพื่อเริ่มต้นใช้งาน</p>
+        </div>
+
+        <!-- ส่วนของฟอร์มกรอกข้อมูล -->
+        <div class="md:w-3/4 bg-white p-8 md:p-14">
+            <h1 class="text-center text-4xl font-bold text-[#0a9da7] tracking-widest mb-10">สมัครสมาชิก</h1>
+            
+            <form id="registerForm" class="space-y-5">
+                <div>
+                    <label class="block text-[13px] font-medium text-[#0a9da7] mb-1.5 ml-4">Username | ชื่อผู้ใช้งาน</label>
+                    <input type="text" id="username" placeholder="Enter your username" required
+                           class="w-full px-5 py-3 bg-[#f8fafc] border border-gray-100 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-[#f1c443] transition text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-[13px] font-medium text-[#0a9da7] mb-1.5 ml-4">Email | อีเมล</label>
+                    <input type="email" id="email" placeholder="Enter your email" required
+                           class="w-full px-5 py-3 bg-[#f8fafc] border border-gray-100 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-[#f1c443] transition text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-[13px] font-medium text-[#0a9da7] mb-1.5 ml-4">Password | รหัสผ่าน</label>
+                    <input type="password" id="password" placeholder="Enter your password" required
+                           class="w-full px-5 py-3 bg-[#f8fafc] border border-gray-100 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-[#f1c443] transition text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-[13px] font-medium text-[#0a9da7] mb-1.5 ml-4">Confirm Password | ยืนยันรหัสผ่าน</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm your password" required
+                           class="w-full px-5 py-3 bg-[#f8fafc] border border-gray-100 rounded-full shadow-inner focus:outline-none focus:ring-2 focus:ring-[#f1c443] transition text-sm">
+                </div>
+
+                <div class="flex items-start space-x-3 pt-2 ml-4">
+                    <input type="checkbox" id="terms" required class="mt-1 w-4 h-4 rounded border-gray-300 accent-[#f36942] cursor-pointer">
+                    <label for="terms" class="text-[14px] text-[#f36942] leading-tight cursor-pointer">
+                        ฉันยอมรับและให้ข้อมูลเพื่อใช้ในการดำเนินการเงื่อนไขการรักษาข้อมูลส่วนบุคคล
+                    </label>
+                </div>
+
+                <button onclick="handleRegister()" id="submitBtn" class="w-full bg-[#f36942] hover:bg-[#ffd25a] text-[#fff] tracking-widest py-3.5 rounded-full font-Regular mt-6 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-black/5">
+                    สมัครสมาชิก
+                </button>
+            </form>
+
+            <div class="text-center mt-10">
+                <p class="text-[11px] text-gray-400 mb-1">Already have an account | มีบัญชีผู้ใช้อยู่แล้ว</p>
+                <a href="login.html" class="text-sm font-bold text-[#f36942] hover:underline tracking-wide">Login | เข้าสู่ระบบ</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const registerForm = document.getElementById('registerForm');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // 1. ตรวจสอบรหัสผ่านตรงกันแบบ Real-time (โค้ดเดิมของคุณดีอยู่แล้ว)
+    confirmPasswordInput.addEventListener('input', function() {
+        if (confirmPasswordInput.value === "") {
+            confirmPasswordInput.style.borderColor = '#e2e8f0';
+        } else if (passwordInput.value !== confirmPasswordInput.value) {
+            confirmPasswordInput.style.borderColor = 'red';
+        } else {
+            confirmPasswordInput.style.borderColor = '#10b981'; 
+        }
+    });
+
+    // 2. ฟังก์ชันจัดการการสมัครสมาชิก
+    registerForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const email = document.getElementById('email').value;
+    const password = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+
+    if (password !== confirmPassword) return alert("รหัสผ่านไม่ตรงกัน");
+
+    submitBtn.innerText = "กำลังส่ง OTP...";
+    submitBtn.disabled = true;
+
+    try {
+        const response = await fetch('http://localhost:3000/register-step1', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            localStorage.setItem('tempEmail', email); // จำเมลไว้ส่งให้หน้า OTP
+            alert("ส่งรหัส OTP ไปที่อีเมลเรียบร้อยแล้วค่ะ!");
+            window.location.href = 'otp.html';
+        } else {
+            alert(data.message);
+            submitBtn.innerText = "สมัครสมาชิก";
+            submitBtn.disabled = false;
+        }
+    } catch (error) {
+        alert("ติดต่อ Server ไม่ได้");
+        submitBtn.disabled = false;
+    }
+});
+</script>
+</body>
+</html>

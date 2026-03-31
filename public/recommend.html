@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Moodiary - คำแนะนำ</title>
+    <style>
+        @font-face { 
+            font-family: 'biscuit2'; 
+            src: url('../assets/fonts/biscuit2.ttf') format('opentype'); 
+        }
+        body { font-family: 'biscuit2', sans-serif; transition: background-color 0.3s; }
+        .sidebar-item:hover { color: #f1c443; cursor: pointer; transition: 0.3s; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+</head>
+<body class="flex h-screen overflow-hidden bg-[#e2ddc7] dark:bg-[#121212] transition-colors duration-300">
+
+    <div class="w-64 bg-[#e2ddc7] dark:bg-[#1a1a1a] flex flex-col p-8 transition-colors">
+        <div class="mb-12">
+            <div class="w-16 h-16 bg-[#eeede9] dark:bg-gray-700 rounded-xl mb-4 overflow-hidden shadow-lg">
+                <img id="navProfilePic" src="https://via.placeholder.com/200" alt="profile" class="w-full h-full object-cover">
+            </div>
+            <h2 id="navUsername" class="text-[#0a9da7] text-xl font-bold uppercase">Loading...</h2>
+            <p id="navEmail" class="text-[#0a9da7] text-[10px] opacity-80">Loading...</p>
+        </div>
+
+        <nav class="space-y-6 text-[#0a9da7]">
+            <div onclick="location.href='home.html'" class="sidebar-item">หน้าแรก</div>
+            <div onclick="location.href='analyze.html'" class="sidebar-item">วิเคราะห์</div>
+            <div onclick="location.href='diary.html'" class="sidebar-item">บันทึก</div>
+            <div onclick="location.href='overview.html'" class="sidebar-item">ภาพรวม</div>
+            <div onclick="location.href='recommend.html'" class="sidebar-item text-[#f1c443] font-bold">คำแนะนำ</div>
+            <div onclick="location.href='profile.html'" class="sidebar-item">บัญชีผู้ใช้</div>
+        </nav>
+
+        <div class="mt-auto">
+            <button onclick="logout()" class="text-[#f36942] text-sm hover:text-red-500 transition-colors">ออกจากระบบ</button>
+        </div>
+    </div>
+
+    <div class="flex-1 p-6">
+        <div class="w-full h-full bg-white dark:bg-[#1a1a1a] rounded-[3rem] flex flex-col overflow-hidden text-[#1a1a1a] dark:text-white shadow-xl transition-all duration-300 p-12">
+            
+            <header class="mb-8">
+                <h1 class="text-4xl font-bold text-[#0a9da7]">คำแนะนำ</h1>
+                <p class="text-gray-400 dark:text-gray-500 text-sm mt-1">คำแนะนำ บทความ และสิ่งที่น่าสนใจ</p>
+                <hr class="mt-6 border-gray-100 dark:border-white/10">
+            </header>
+
+            <div class="flex-1 overflow-y-auto no-scrollbar space-y-12">
+                <section id="adviceSection">
+                    <h2 id="adviceTitle" class="text-xl font-bold text-[#f36942] dark:text-[#f1c443] mb-4 leading-relaxed">
+                        </h2>
+                    <div id="adviceContent" class="text-[#0a9da7] dark:text-gray-300 text-sm space-y-2 leading-loose">
+                        </div>
+                </section>
+
+                <section>
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-[#f36942] dark:text-[#f36942]">สิ่งที่น่าสนใจ</h2>
+                    </div>
+                    
+                    <div id="videoList" class="space-y-6">
+                        </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+
+        // ข้อมูลแนะนำ (moodWisdom) คงเดิมจากโค้ดของคุณ
+        const moodWisdom = {
+            "มีความรัก": {
+                title: "โลกทั้งใบดูเหมือนจะเป็นสีชมพูเลยนะช่วงนี้!<br>เป็นช่วงเวลาที่ยอดเยี่ยมที่จะสร้างความทรงจำดีๆ ร่วมกับใครสักคน",
+                tips: ["• แสดงความจริงใจ: บอกความรู้สึกหรือขอบคุณคนข้างๆ ให้บ่อยขึ้น", "• รักตัวเองด้วย: อย่าลืมแบ่งปันความรักนั้นให้ตัวเองในทุกๆ วัน", "• บันทึกความจำ: ถ่ายรูปหรือเขียนบันทึกช่วงเวลาที่ใจฟูเอาไว้ดูทีหลัง"],
+                videos: [
+                    { title: "เจอความรักดีๆ และชีวิตที่ใช่ด้วย ‘กฎแรงดึงดูด’", url: "https://youtu.be/DLniSjfBLWo" },
+                    { title: "เขาไม่ได้ชอบทันที แต่เพิ่มโอกาสให้เขาชอบได้นะ", url: "https://youtu.be/JgYTT-3lj2o" }
+                ]
+            },
+            "มีความสุข": {
+                title: "เป็นเรื่องที่ดีมากเลยที่คุณรู้สึกโอเคและมีอารมณ์ที่ดี!",
+                tips: ["• ดื่มด่ำกับมัน: ชื่นชมและจดจำความรู้สึกดีๆ นี้ไว้", "• ลงมือทำสิ่งที่รัก: ใช้พลังงานบวกไปกับการทำกิจกรรมอดิเรก", "• แบ่งปัน: ติดต่อเพื่อนหรือครอบครัวเพื่อแบ่งปันช่วงเวลาดีๆ"],
+                videos: [
+                    { title: "10 พอดแคสต์ รวมทริกกำจัดนิสัยร้ายๆ", url: "https://youtu.be/gumNUoBBOTI" },
+                    { title: "Stop Wasting TIME 💌 9 สิ่งที่เลิกทำ", url: "https://youtu.be/7ukVGu5JcuA" }
+                ]
+            },
+            "เศร้า": {
+                title: "ช่วงนี้คุณอาจจะรู้สึกเหนื่อยหรือใจไม่ค่อยดีนัก...<br>ไม่เป็นไรเลยที่จะรู้สึกแบบนี้ ลองให้เวลากับตัวเองดูนะ",
+                tips: ["• ยอมรับความรู้สึก: ไม่ต้องรีบหายเศร้า ปล่อยให้ตัวเองได้ระบายออกมา", "• พักผ่อนให้เพียงพอ: บางครั้งความเศร้าอาจมาจากร่างกายที่เหนื่อยล้า", "• กอดตัวเอง: ยิ้มให้ตัวเองในกระจกและบอกว่า 'เก่งมากแล้ว'"],
+                videos: [
+                    { title: "วันนี้มาให้อภัยตัวเองกัน", url: "https://youtu.be/OZYED7MUTOg" },
+                    { title: "เพราะรักตัวเองเป็นไม่เจ็บเลยสักวัน", url: "https://youtu.be/6Wm9hIPtj4g" }
+                ]
+            },
+            "โอเคดี": {
+                title: "วันนี้ดูเหมือนจะเป็นวันที่ราบรื่นสำหรับคุณนะ<br>รักษาความสมดุลนี้ไว้ และลองทำอะไรใหม่ๆ ดูสิ",
+                tips: ["• เรียนรู้สิ่งใหม่: ลองอ่านบทความสั้นๆ หรือฟังพอดแคสต์", "• วางแผนล่วงหน้า: ใช้ช่วงเวลาที่ใจสงบเตรียมตัวสำหรับวันต่อไป", "• ฝึกสติ: อยู่กับปัจจุบันและขอบคุณสิ่งเล็กๆ รอบตัว"],
+                videos: [
+                    { title: "10 นิสัยเล็กๆ ที่ทำให้ชีวิตดีขึ้น", url: "https://youtu.be/RzyAubu-Bes" },
+                    { title: "7 ข้อ เริ่มลงมือเปลี่ยนวันนี้ให้กลายเป็นชีวิตในฝัน", url: "https://youtu.be/VkIiafyTYB8" }
+                ]
+            },
+            "กังวล": {
+                title: "ความกังวลอาจทำให้คุณรู้สึกฟุ้งซ่าน...<br>ลองกลับมาอยู่กับปัจจุบันและสิ่งที่ทำได้ตอนนี้ดูนะ",
+                tips: ["• เขียนสิ่งที่กังวล: การจดลงกระดาษจะช่วยให้เห็นภาพชัดขึ้น", "• ฝึกหายใจแบบ 4-7-8: ช่วยให้ระบบประสาทสงบลง", "• ทำทีละอย่าง: ลดความวุ่นวายด้วยการโฟกัสแค่สิ่งที่อยู่ตรงหน้า"],
+                videos: [
+                    { title: "โรควิตกกังวล ความกลัว แพนิค แตกต่างกันยังไง", url: "https://youtu.be/fuE_oIPhMzk" },
+                    { title: "รับมือกับอาการวิตกกังวล ด้วยการ ‘เลิกเลี้ยงลิงในสมอง’", url: "https://youtu.be/SNIxu266wUE" }
+                ]
+            },
+            "โกรธ": {
+                title: "ใจเย็นๆ นะ... ดูเหมือนความโกรธกำลังเข้าครอบงำคุณอยู่",
+                tips: ["• นับ 1-10: ให้เวลากับการหายใจก่อนจะพูดหรือทำอะไร", "• ปลดปล่อยพลังงาน: ลองออกกำลังกายเพื่อระบายความอัดอั้น", "• หาสาเหตุที่แท้จริง: อะไรคือสิ่งที่ทำให้เราโกรธกันแน่"],
+                videos: [
+                    { title: "ความรำคาญและความหงุดหงิดใจ", url: "https://youtu.be/zbni46ENrLE" },
+                    { title: "วิธีรับมือกับความโกรธ ฉบับหนังสือ", url: "https://youtu.be/SNIxu266wUE" }
+                ]
+            }
+        };
+
+        async function loadRecommendation() {
+            const userId = localStorage.getItem('userId') || '1';
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const year = now.getFullYear();
+
+            try {
+                const res = await fetch(`${API_URL}/api/overview/${userId}?month=${month}&year=${year}`);
+                const result = await res.json();
+
+                if (result.status === "Success" && result.data.stats.length > 0) {
+                    const topMoodData = result.data.stats.reduce((prev, current) => 
+                        (prev.count > current.count) ? prev : current
+                    );
+                    renderAdvice(topMoodData.mood);
+                } else {
+                    renderAdvice("มีความสุข");
+                }
+            } catch (err) {
+                console.error("Error loading top mood:", err);
+                renderAdvice("มีความสุข");
+            }
+        }
+
+        function renderAdvice(mood) {
+            const data = moodWisdom[mood] || moodWisdom["มีความสุข"];
+            document.getElementById('adviceTitle').innerHTML = data.title;
+            document.getElementById('adviceContent').innerHTML = data.tips.map(t => `<p>${t}</p>`).join('');
+
+            const videoList = document.getElementById('videoList');
+            videoList.innerHTML = data.videos.map(v => {
+                const videoId = getYouTubeID(v.url);
+                const thumbUrl = videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : 'https://via.placeholder.com/480x270';
+
+                return `
+                    <div onclick="window.open('${v.url}', '_blank')" class="video-card flex space-x-6 items-center cursor-pointer group mb-6 p-4 rounded-3xl transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/5 border border-transparent hover:border-gray-100 dark:hover:border-white/10">
+                        <div class="w-40 h-24 flex-shrink-0 bg-gray-200 dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm relative">
+                            <img src="${thumbUrl}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-[#f36942] dark:text-[#f1c443] text-lg mb-1 group-hover:underline transition">${v.title}</h4>
+                            <p class="text-gray-400 dark:text-gray-500 text-sm leading-relaxed">เหมาะกับอารมณ์ ${mood} ของคุณในเดือนนี้</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getYouTubeID(url) {
+            if (!url) return null;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+
+        async function updateGlobalProfile() {
+            const userId = localStorage.getItem('userId') || 1; 
+            try {
+                const response = await fetch(`${API_URL}/api/user/${userId}`);
+                const data = await response.json();
+                if (data.status === "Success") {
+                    const user = data.user;
+                    document.getElementById('navProfilePic').src = user.profile_image ? `${API_URL}/uploads/${user.profile_image}` : "https://via.placeholder.com/200";
+                    document.getElementById('navUsername').innerText = user.username;
+                    document.getElementById('navEmail').innerText = user.email;
+                }
+            } catch (err) { console.error("Profile update error:", err); }
+        }
+
+        window.onload = function() {
+            updateGlobalProfile();
+            loadRecommendation();
+        };
+    </script>
+</body>
+</html>

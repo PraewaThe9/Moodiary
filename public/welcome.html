@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moodiary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @font-face {
+            font-family: 'biscuit2';
+            src: url('../assets/fonts/biscuit2.ttf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'biscuit2', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-[#e7e1ca] min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-4xl">
+        <div class="bg-[#fff] rounded-[50px] py-12 px-6 flex flex-col items-center justify-center shadow-2xl border border-white/5 space-y-2">
+            
+            <div class="flex justify-center w-full">
+                <img src="../assets/images/Moodairylogo.png" alt="Mood Diary" 
+                    class="w-full max-w-2xl h-auto object-contain transform scale-110">
+            </div>
+
+            <div class="text-center mt-[-10px] z-10">
+                <p class="text-xl text-[#0a9da7] font-Regular mb-6">
+                    บันทึกทุกความรู้สึก ให้เราดูแลใจ
+                </p> 
+
+                <div class="flex flex-col space-y-3 items-center">
+                    <button onclick="window.location.href='login.html'" 
+                        class="w-64 bg-[#f36942] hover:bg-[#ffb347] text-white py-3 rounded-full text-lg font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md">
+                        เข้าสู่ระบบ
+                    </button>
+                    
+                    <button onclick="window.location.href='register.html'" 
+                        class="w-64 bg-[#0a9da7] hover:bg-[#20c3cf] text-white py-3 rounded-full text-lg font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md">
+                        สมัครสมาชิก
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

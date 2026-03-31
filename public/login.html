@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>เข้าสู่ระบบ - Moodiary</title>
+    <style>
+        @font-face {
+            font-family: 'biscuit2';
+            src: url('../assets/fonts/biscuit2.ttf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'biscuit2', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-[#e7e1ca] flex items-center justify-center min-h-screen p-4 md:p-10">
+
+    <div class="bg-black w-full max-w-5xl flex flex-col md:flex-row rounded-[3rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] ">
+        
+        <!-- Sidebar Left -->
+        <div class="md:w-[25%] bg-[#e7e1ca] p-10 flex flex-col items-start justify-start ">
+            <div class="w-14 h-14 bg-white rounded-2xl mb-6 shadow-lg shadow-white/5 flex items-center justify-center overflow-hidden">
+    <img src="../assets/images/Moodairylogo.png" alt="Logo" class="w-full h-full object-contain p-2">
+</div> 
+            <h2 class="text-[#0a9da7] text-2xl font-medium tracking-tight">เข้าสู่ระบบ</h2>
+            <p class="text-[#f36942] text-sm mt-2 font-light">เพื่อเริ่มต้นใช้งาน</p>
+        </div>
+
+        <!-- Main Login Content -->
+        <div class="md:w-[75%] bg-white p-8 md:p-16 flex flex-col justify-center">
+            <h1 class="text-center text-3xl md:text-4xl font-bold text-[#0a9da7] mb-12 tracking-widest uppercase">เข้าสู่ระบบ</h1>
+            
+            <form id="loginForm" class="space-y-6 max-w-md mx-auto w-full">
+                <!-- Email Input -->
+                <div class="space-y-2">
+                    <label class="block text-[14px] font-medium text-[#0a9da7] ml-5">Email | อีเมล</label>
+                    <input type="email" id="email" placeholder="Enter your email" required
+                           class="w-full px-6 py-4 bg-[#f8fafc] border border-gray-100 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-[#f1c443] transition-all text-sm">
+                </div>
+
+                <!-- Password Input -->
+                <div class="space-y-2">
+                    <label class="block text-[14px] font-medium text-[#0a9da7] ml-5">Password | รหัสผ่าน</label>
+                    <input type="password" id="password" placeholder="Enter your password" required
+                           class="w-full px-6 py-4 bg-[#f8fafc] border border-gray-100 rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] focus:outline-none focus:ring-2 focus:ring-[#f1c443] transition-all text-sm">
+                </div>
+
+                <!-- Remember & Forgot Password -->
+                <div class="flex items-center justify-between px-2">
+                    <div class="flex items-center space-x-2">
+                        <input type="checkbox" id="remember" class="w-4 h-4 rounded border-gray-300 accent-[#f36942] cursor-pointer">
+                        <label for="remember" class="text-[12px] text-gray-400 cursor-pointer">Remember me | จดจำฉัน</label>
+                    </div>
+                    <a href="forgot-password.html" class="text-[12px] font-bold text-[#0a9da7] hover:underline">Forgotten Password | ลืมรหัสผ่าน</a>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="w-full bg-[#f36942] hover:bg-[#ffd25a] text-[#fff] py-4 rounded-full font-Regular text-lg mt-8 tracking-widest active:scale-[0.99] shadow-xl shadow-black/10 transition-all duration-300">
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+
+            <!-- Register Link -->
+            <div class="text-center mt-12 space-y-2">
+                <p class="text-[12px] text-gray-400 font-light">Don't have an account | ยังไม่มีบัญชีใช่หรือไม่ ?</p>
+                <a href="register.html" class="inline-block text-sm font-bold text-[#f36942] border-b-2 border-transparent hover:underline tracking-wide">Register now | สร้างบัญชีใหม่</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+
+            const email = emailInput.value;
+            const password = passwordInput.value;
+
+            try {
+                const response = await fetch('http://localhost:3000/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // 1. เก็บชื่อผู้ใช้ลงใน localStorage (สำคัญมาก)
+                    localStorage.setItem('username', data.username);
+                    
+                    alert(`ยินดีต้อนรับคุณ ${data.username}!`);
+                    
+                    // 2. เปลี่ยนหน้าไปที่หน้า home.html (ไม่ใช่ welcome.html)
+                    window.location.href = 'home.html'; 
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                console.error("Login Error:", error);
+                alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบว่าเปิด Server หรือยัง");
+            }
+        });
+    </script>
+</body>
+</html>
