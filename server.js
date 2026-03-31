@@ -27,14 +27,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 const db = mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '123456', 
-    database: process.env.DB_NAME || 'mood_diary',
-    port: process.env.DB_PORT || 3306,
-    // เพิ่มบรรทัดนี้เพื่อให้เชื่อมต่อ Aiven ได้สำเร็จ
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
     ssl: {
-        rejectUnauthorized: false
+        rejectUnauthorized: false // บรรทัดนี้สำคัญมากสำหรับการเชื่อมต่อ Cloud DB
     }
 });
 
