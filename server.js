@@ -28,7 +28,10 @@ app.use(express.urlencoded({ extended: true }));
 // ทำให้โฟลเดอร์ public และ uploads เข้าถึงได้
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
-
+app.get('/', (req, res) => {
+    // เลือกไฟล์ที่คุณต้องการให้เป็นหน้าแรก (เช่น welcome.html หรือ login.html)
+    res.sendFile(path.join(__dirname, 'public', 'welcome.html')); 
+});
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
