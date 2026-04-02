@@ -8,15 +8,15 @@ app = Flask(__name__)
 CORS(app) # อนุญาตให้หน้าเว็บ (HTML) เรียกใช้งาน API นี้ได้
 
 
-# --- การตั้งค่าพาธโมเดล ---
-MODEL_PATH = "./final_moodiary_model"
-CHECKPOINT = "./final_moodiary_model"
-print("Loading Model... Please wait.")
-tokenizer = AutoTokenizer.from_pretrained(CHECKPOINT)
+# --- การตั้งค่าพารามิเตอร์โมเดล ---
+# ใช้ชื่อ Repo จาก Hugging Face ของคุณ
+MODEL_PATH = "Praewa19p/moodiary-berta"
+CHECKPOINT = "Praewa19p/moodiary-berta"
 
-# โหลดโมเดลครั้งเดียวพร้อมกำหนด 6 Labels และเข้าโหมด eval
+print("Loading Model from Hugging Face... Please wait.")
+tokenizer = AutoTokenizer.from_pretrained(CHECKPOINT)
 model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH, num_labels=6)
-model.eval() 
+model.eval()
 
 MOOD_LABELS = {
     0: "โกรธ", 

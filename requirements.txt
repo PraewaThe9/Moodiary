@@ -1,0 +1,8 @@
+flask
+flask-cors
+transformers
+torch
+sentencepiece
+safetensors
+numpy
+pandas
