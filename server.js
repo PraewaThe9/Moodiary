@@ -1,3 +1,4 @@
+require('dotenv').config(); 
 const express = require('express');
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
@@ -26,7 +27,6 @@ app.use(express.urlencoded({ extended: true }));
 // ทำให้โฟลเดอร์ uploads เข้าถึงได้ผ่าน URL
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-// --- [FIXED] ตั้งค่าการเชื่อมต่อ MySQL สำหรับ Aiven + SSL ---
 const db = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
