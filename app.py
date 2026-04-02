@@ -9,10 +9,8 @@ CORS(app) # อนุญาตให้หน้าเว็บ (HTML) เรี
 
 
 # --- การตั้งค่าพาธโมเดล ---
-# ใช้พาธเดียวกันทั้งคู่เพื่อดึงจาก Hugging Face โดยตรง
-MODEL_PATH = "airesearch/wangchanberta-base-att-spm-uncased"
-CHECKPOINT = "airesearch/wangchanberta-base-att-spm-uncased" 
-
+MODEL_PATH = "./final_moodiary_model"
+CHECKPOINT = "./final_moodiary_model"
 print("Loading Model... Please wait.")
 tokenizer = AutoTokenizer.from_pretrained(CHECKPOINT)
 
