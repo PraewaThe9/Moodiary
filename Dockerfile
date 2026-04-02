@@ -14,7 +14,7 @@ COPY . .
 RUN npm install
 
 # ติดตั้ง Library ของ Python
-RUN python3 -m pip install --no-cache-dir -r requirements.txt
+RUN python3 -m pip install --no-cache-dir -r requirements.txt --break-system-packages
 
 # สั่งรันทั้งสองอย่างพร้อมกัน
 CMD node server.js & python3 app.py
