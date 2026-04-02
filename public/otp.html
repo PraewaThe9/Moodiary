@@ -94,6 +94,19 @@
             if (e.key === 'Backspace' && !input.value && index > 0) otpInputs[index - 1].focus();
         });
     });
+
+    async function resendOTP() {
+    try {
+        const response = await fetch('/register-step1', { // หรือใช้ Endpoint สำหรับ resend โดยเฉพาะ
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: userEmail, isResend: true }) 
+        });
+        if (response.ok) alert("ส่งรหัสใหม่ไปที่อีเมลแล้วค่ะ!");
+    } catch (e) {
+        alert("ไม่สามารถส่งรหัสได้ในขณะนี้");
+    }
+}
 </script>
 </body>
 </html>
