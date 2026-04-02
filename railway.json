@@ -6,8 +6,5 @@
   "deploy": {
     "startCommand": "node server.js & python3 app.py",
     "restartPolicyType": "ON_FAILURE"
-  },
-  "nixpacks": {
-    "providers": ["node", "python"]
   }
 }
