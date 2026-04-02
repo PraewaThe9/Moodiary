@@ -3,7 +3,7 @@
     "tailwindcss": "^4.2.2"
   },
   "scripts": {
-    "build": "tailwindcss -i ./src/input.css -o ./style.css --watch"
+    "build": "tailwindcss -i ./src/input.css -o ./style.css"
   },
   "name": "project-final",
   "version": "1.0.0",
