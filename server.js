@@ -6,6 +6,7 @@ const cors = require('cors');
 const nodemailer = require('nodemailer');
 const multer = require('multer');
 const path = require('path'); 
+const axios = require('axios'); // ✅ อย่าลืม npm install axios นะครับ
 
 const app = express();
 
@@ -24,7 +25,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ทำให้โฟลเดอร์ uploads เข้าถึงได้ผ่าน URL
+// ทำให้โฟลเดอร์ public และ uploads เข้าถึงได้
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 const db = mysql.createConnection({
@@ -33,9 +35,7 @@ const db = mysql.createConnection({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
-    ssl: {
-        rejectUnauthorized: false // จำเป็นมากสำหรับ Cloud DB
-    }
+    ssl: { rejectUnauthorized: false }
 });
 
 db.connect((err) => {
@@ -56,6 +56,26 @@ const transporter = nodemailer.createTransport({
 
 let otpStore = {};
 let tempUserData = {};
+
+// --- 🌟 ส่วนที่เพิ่มใหม่: เชื่อมต่อ Python AI ---
+app.post('/api/analyze-mood', async (req, res) => {
+    try {
+        const { text } = req.body;
+        if (!text) return res.status(400).json({ message: "กรุณาระบุข้อความ" });
+
+        // ยิงไปหา Python Flask ที่พอร์ต 5001 (Internal)
+        const aiResponse = await axios.post('http://127.0.0.1:5001/predict', { text: text });
+
+        res.json({ 
+            status: "Success", 
+            mood: aiResponse.data.mood, 
+            confidence: aiResponse.data.confidence 
+        });
+    } catch (error) {
+        console.error("AI Error:", error.message);
+        res.status(500).json({ status: "Error", message: "AI ไม่ตอบสนอง (เช็คว่า app.py รันอยู่ที่พอร์ต 5001 หรือยัง)" });
+    }
+});
 
 // --- 1. ระบบสมัครสมาชิกและ OTP ---
 app.post('/register-step1', async (req, res) => {
@@ -152,12 +172,10 @@ app.post('/api/update-profile', upload.single('profile_image'), (req, res) => {
     const { userId, username, email } = req.body;
     let sql = "UPDATE users SET username = ?, email = ? WHERE id = ?";
     let params = [username, email, userId];
-
     if (req.file) {
         sql = "UPDATE users SET username = ?, email = ?, profile_image = ? WHERE id = ?";
         params = [username, email, req.file.filename, userId];
     }
-
     db.query(sql, params, (err, result) => {
         if (err) return res.status(500).json({ status: "Error", message: err.message }); 
         res.json({ status: "Success", message: "บันทึกเรียบร้อยแล้ว" });
@@ -167,11 +185,7 @@ app.post('/api/update-profile', upload.single('profile_image'), (req, res) => {
 // --- 4. ระบบบันทึกไดอารี่/อารมณ์ ---
 app.get('/api/diary-months/:userId', (req, res) => {
     const userId = req.params.userId.toString().split(':')[0];
-    const sql = `
-        SELECT DISTINCT MONTH(entry_date) AS month_num, YEAR(entry_date) AS year_num
-        FROM mood_entries WHERE user_id = ? 
-        ORDER BY year_num DESC, month_num DESC
-    `;
+    const sql = `SELECT DISTINCT MONTH(entry_date) AS month_num, YEAR(entry_date) AS year_num FROM mood_entries WHERE user_id = ? ORDER BY year_num DESC, month_num DESC`;
     db.query(sql, [userId], (err, results) => {
         if (err) return res.status(500).json({ status: "Error", message: err.message });
         res.json({ status: "Success", data: results });
@@ -240,8 +254,8 @@ app.get('/api/overview/:userId', (req, res) => {
     });
 });
 
-// --- [FIXED] ตั้งค่า Port ให้รองรับ Render ---
+// --- [FIXED] ตั้งค่า Port ให้รองรับ Railway ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Node.js Server is running on port ${PORT}`);
 });
