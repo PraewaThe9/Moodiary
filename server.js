@@ -51,12 +51,17 @@ db.connect((err) => {
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS 
+    },
+    tls: {
+        rejectUnauthorized: false // ช่วยให้ส่งผ่าน Server ต่างประเทศได้ง่ายขึ้น
     }
 });
-
 let otpStore = {};
 let tempUserData = {};
 
@@ -83,17 +88,38 @@ app.post('/api/analyze-mood', async (req, res) => {
 // --- 1. ระบบสมัครสมาชิกและ OTP ---
 app.post('/register-step1', async (req, res) => {
     const { username, email, password } = req.body;
+    console.log(`📩 กำลังพยายามส่ง OTP ไปที่: ${email}`); // ใส่ไว้ดูใน Log
+
     if (!username || !email || !password) return res.status(400).json({ message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
+
     const checkSql = "SELECT * FROM users WHERE email = ? OR username = ?";
     db.query(checkSql, [email, username], async (err, results) => {
+        if (err) {
+            console.error("❌ Database Error:", err);
+            return res.status(500).json({ message: "เกิดข้อผิดพลาดที่ฐานข้อมูล" });
+        }
         if (results && results.length > 0) return res.status(400).json({ message: "Username หรือ Email นี้ถูกใช้งานแล้ว" });
+
         const otp = Math.floor(100000 + Math.random() * 900000);
         otpStore[email] = otp;
         tempUserData[email] = { username, email, password };
-        setTimeout(() => { if (otpStore[email] === otp) { delete otpStore[email]; delete tempUserData[email]; } }, 300000);
-        const mailOptions = { from: '"Mood Diary Support" <praewa8045@gmail.com>', to: email, subject: 'ยืนยันรหัส OTP สำหรับสมัครสมาชิก', html: `<h2>รหัส OTP คือ: ${otp}</h2>` };
-        try { await transporter.sendMail(mailOptions); res.json({ message: "ส่ง OTP เรียบร้อยแล้ว" }); } 
-        catch (error) { res.status(500).json({ message: "ไม่สามารถส่งอีเมลได้" }); }
+
+        const mailOptions = { 
+            from: `"Mood Diary Support" <${process.env.EMAIL_USER}>`, 
+            to: email, 
+            subject: 'ยืนยันรหัส OTP สำหรับสมัครสมาชิก', 
+            html: `<h2>รหัส OTP คือ: <span style="color: #f1c443;">${otp}</span></h2><p>รหัสนี้จะหมดอายุภายใน 5 นาที</p>` 
+        };
+
+        try { 
+            await transporter.sendMail(mailOptions); 
+            console.log("✅ ส่งอีเมลสำเร็จ!"); 
+            res.json({ message: "ส่ง OTP เรียบร้อยแล้ว" }); 
+        } 
+        catch (error) { 
+            console.error("❌ Nodemailer Error:", error); // บรรทัดนี้จะทำให้โชว์ใน Deploy Logs ชัวร์ๆ!
+            res.status(500).json({ message: "ไม่สามารถส่งอีเมลได้", detail: error.message }); 
+        }
     });
 });
 
