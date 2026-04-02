@@ -128,7 +128,7 @@
         // ส่งรหัสอีกครั้ง
         async function resendOTP() {
             try {
-                const response = await fetch('http://localhost:3000/forgot-password', {
+                const response = await fetch('/forgot-password', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ email })

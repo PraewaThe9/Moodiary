@@ -118,7 +118,7 @@
 
         async function updateGlobalProfile() {
             const userId = localStorage.getItem('userId') || 1; 
-            const API_URL = 'http://localhost:3000'; 
+            const API_URL = ''; 
 
             try {
                 const response = await fetch(`${API_URL}/api/user/${userId}`);
