@@ -50,17 +50,19 @@ db.connect((err) => {
 });
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    family: 4,
+    port: 587,
+    secure: false, // 587 ต้องเป็น false
     auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS 
+        pass: process.env.EMAIL_PASS
     },
+    // บังคับ IPv4 แบบเด็ดขาด
+    family: 4, 
     tls: {
-        rejectUnauthorized: false // ช่วยให้ส่งผ่าน Server ต่างประเทศได้ง่ายขึ้น
+        // ช่วยเรื่องความปลอดภัยและการเชื่อมต่อจาก Server นอก
+        ciphers: 'SSLv3',
+        rejectUnauthorized: false
     }
 });
 let otpStore = {};
