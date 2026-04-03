@@ -51,20 +51,26 @@ db.connect((err) => {
     console.log('✅ Connected to MySQL Database (Aiven)!');
 });
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', // กลับมาใช้ชื่อเดิมได้ เพราะเราจะเปลี่ยนวิธีเชื่อมต่อ
-    port: 465,               // เปลี่ยนจาก 587 เป็น 465
-    secure: true,            // เปลี่ยนจาก false เป็น true (สำหรับ Port 465)
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    // บังคับ IPv4 อีกครั้งเพื่อความชัวร์
-    family: 4,
-    tls: {
-        rejectUnauthorized: false
-    }
-});
+const sgMail = require('@sendgrid/mail');
+sgMail.setApiKey('ใส่_API_KEY_ที่ก๊อปมา_ตรงนี้'); // หรือใช้ process.env.SENDGRID_API_KEY
+
+// ในฟังก์ชัน register-step1 เปลี่ยนจาก nodemailer เป็น:
+const msg = {
+  to: email,
+  from: 'praewa8045@gmail.com', // สำคัญ: ต้องตรงกับที่ Verify ใน SendGrid
+  subject: 'รหัส OTP สำหรับ Moodiary',
+  text: `รหัสยืนยันของคุณคือ: ${otp}`,
+  html: `<strong>รหัสยืนยันของคุณคือ: ${otp}</strong>`,
+};
+
+try {
+    await sgMail.send(msg);
+    console.log('Email sent via SendGrid');
+    res.json({ message: "ส่ง OTP เรียบร้อยแล้ว" });
+} catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "ส่งอีเมลไม่สำเร็จ" });
+}
 let otpStore = {};
 let tempUserData = {};
 
