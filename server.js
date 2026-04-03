@@ -1,4 +1,6 @@
 require('dotenv').config(); 
+const dns = require('dns');
+dns.setDefaultResultOrder('ipv4first');
 const express = require('express');
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
@@ -50,18 +52,17 @@ db.connect((err) => {
 });
 
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
+    // เปลี่ยนจาก 'smtp.gmail.com' เป็น IP ของ Google โดยตรงเพื่อเลี่ยง IPv6
+    host: '74.125.204.108', 
     port: 587,
-    secure: false, // 587 ต้องเป็น false
+    secure: false,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
-    // บังคับ IPv4 แบบเด็ดขาด
-    family: 4, 
     tls: {
-        // ช่วยเรื่องความปลอดภัยและการเชื่อมต่อจาก Server นอก
-        ciphers: 'SSLv3',
+        // บังคับให้คุยกับ host ชื่อ smtp.gmail.com แม้จะวิ่งไปที่ IP
+        servername: 'smtp.gmail.com',
         rejectUnauthorized: false
     }
 });
