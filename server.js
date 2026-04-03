@@ -52,17 +52,16 @@ db.connect((err) => {
 });
 
 const transporter = nodemailer.createTransport({
-    // เปลี่ยนจาก 'smtp.gmail.com' เป็น IP ของ Google โดยตรงเพื่อเลี่ยง IPv6
-    host: '74.125.204.108', 
-    port: 587,
-    secure: false,
+    host: 'smtp.gmail.com', // กลับมาใช้ชื่อเดิมได้ เพราะเราจะเปลี่ยนวิธีเชื่อมต่อ
+    port: 465,               // เปลี่ยนจาก 587 เป็น 465
+    secure: true,            // เปลี่ยนจาก false เป็น true (สำหรับ Port 465)
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
+    // บังคับ IPv4 อีกครั้งเพื่อความชัวร์
+    family: 4,
     tls: {
-        // บังคับให้คุยกับ host ชื่อ smtp.gmail.com แม้จะวิ่งไปที่ IP
-        servername: 'smtp.gmail.com',
         rejectUnauthorized: false
     }
 });
